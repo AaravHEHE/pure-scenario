@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
+import { useSoundSettings } from "@/hooks/use-sound-settings";
+
 const navLinks = [
   { to: "/stats", label: "Stats" },
   { to: "/leaderboard", label: "Leaderboard" },
@@ -8,6 +10,7 @@ const navLinks = [
 
 export function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { enabled: soundEnabled, toggle: toggleSound } = useSoundSettings();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-base">
@@ -31,9 +34,11 @@ export function SiteHeader() {
         <div className="flex items-center gap-2">
           <button
             type="button"
+            aria-pressed={soundEnabled}
+            onClick={toggleSound}
             className="hidden border px-3 py-2 font-sans text-xs uppercase tracking-widest text-ink sm:inline-flex"
           >
-            Sound: On
+            Sound: {soundEnabled ? "On" : "Off"}
           </button>
           <button
             type="button"
@@ -80,9 +85,11 @@ export function SiteHeader() {
           ))}
           <button
             type="button"
+            aria-pressed={soundEnabled}
+            onClick={toggleSound}
             className="px-4 py-3 text-left font-sans text-xs uppercase tracking-widest text-ink sm:hidden"
           >
-            Sound: On
+            Sound: {soundEnabled ? "On" : "Off"}
           </button>
         </nav>
       ) : null}

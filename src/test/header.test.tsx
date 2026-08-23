@@ -9,14 +9,15 @@ import {
   Outlet,
 } from "@tanstack/react-router";
 import { SiteHeader } from "../components/site-header";
+import { SoundSettingsProvider } from "../hooks/use-sound-settings";
 
 function buildRouter() {
   const rootRoute = createRootRoute({
     component: () => (
-      <>
+      <SoundSettingsProvider>
         <SiteHeader />
         <Outlet />
-      </>
+      </SoundSettingsProvider>
     ),
   });
   const indexRoute = createRoute({ getParentRoute: () => rootRoute, path: "/", component: () => null });
