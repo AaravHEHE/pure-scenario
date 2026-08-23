@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { CoinFlipBand } from "@/components/scenario-bands/coin-flip-band";
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -19,8 +21,7 @@ export const Route = createFileRoute("/")({
   component: GamePage,
 });
 
-const bands = [
-  { key: "band-1", bg: "bg-tomato", text: "text-on-dark", slot: "border-on-dark" },
+const placeholderBands = [
   { key: "band-2", bg: "bg-mustard", text: "text-on-light", slot: "border-on-light" },
   { key: "band-3", bg: "bg-forest", text: "text-on-dark", slot: "border-on-dark" },
 ] as const;
@@ -28,7 +29,8 @@ const bands = [
 function GamePage() {
   return (
     <main>
-      {bands.map((band) => (
+      <CoinFlipBand />
+      {placeholderBands.map((band) => (
         <section
           key={band.key}
           className={`flex min-h-[78vh] w-full flex-col items-center justify-center gap-8 px-4 py-16 ${band.bg} ${band.text}`}
