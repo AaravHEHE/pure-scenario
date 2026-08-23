@@ -3,24 +3,13 @@ import { useEffect, useRef, useState } from "react";
 import { audioManager } from "@/lib/audio-manager";
 import { flipCoin, type CoinSide } from "@/lib/coin-flip";
 import { useAttemptScenario, useBalance, useRecordScenarioResult } from "@/hooks/use-game-data";
+import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import { SCENARIOS } from "@/lib/scenarios";
 
 const SCENARIO = SCENARIOS["coin-flip"];
 const FLIP_DURATION_MS = 900;
 
 type Phase = "idle" | "flipping" | "result";
-
-function usePrefersReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
-    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduced(query.matches);
-    const onChange = () => setReduced(query.matches);
-    query.addEventListener("change", onChange);
-    return () => query.removeEventListener("change", onChange);
-  }, []);
-  return reduced;
-}
 
 const sideLabel: Record<CoinSide, string> = { heads: "Heads", tails: "Tails" };
 

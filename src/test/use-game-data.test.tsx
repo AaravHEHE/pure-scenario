@@ -86,3 +86,43 @@ describe("useRecordScenarioResult (win/loss recording)", () => {
     expect(statsUpsert?.values).toMatchObject({ wins: 0, losses: 1 });
   });
 });
+
+describe("balance is shared across scenarios (generalized data layer)", () => {
+  it("carries the balance forward from one scenario's win into the next scenario's attempt", async () => {
+    const { result } = renderHook(
+      () => ({ record: useRecordScenarioResult(), attempt: useAttemptScenario() }),
+      { wrapper },
+    );
+
+    await act(async () => {
+      await result.current.record.mutateAsync({ scenarioKey: "coin-flip", won: true, points: 1 });
+    });
+    await act(async () => {
+      await result.current.record.mutateAsync({
+        scenarioKey: "rock-paper-scissors",
+        won: true,
+        points: 2,
+      });
+    });
+
+    const balanceUpserts = upsertCalls.filter((c) => c.table === "player_balances");
+    // One shared balance key: the second scenario's win builds on the first's, 1 + 2 = 3.
+    expect(balanceUpserts.at(-1)?.values).toMatchObject({ balance: 3 });
+
+    // But per-scenario stats stay independent — a fresh row for the new scenario.
+    const rpsStatsUpsert = upsertCalls.find(
+      (c) =>
+        c.table === "scenario_stats" &&
+        (c.values as { scenario_key: string }).scenario_key === "rock-paper-scissors",
+    );
+    expect(rpsStatsUpsert?.values).toMatchObject({ wins: 1, losses: 0 });
+
+    await act(async () => {
+      await result.current.attempt.mutateAsync({ scenarioKey: "rock-paper-scissors", cost: 0 });
+    });
+    // Attempting doesn't touch the shared balance when cost is 0.
+    expect(upsertCalls.filter((c) => c.table === "player_balances").at(-1)?.values).toMatchObject({
+      balance: 3,
+    });
+  });
+});
