@@ -1,3 +1,6 @@
+// Hand-patched to match supabase/migrations/20260823200000_add_points_system.sql —
+// no DB credentials in this environment to run the real `supabase gen types` yet.
+// Regenerating from the live schema should produce an equivalent file.
 export type Json =
   | string
   | number
@@ -14,7 +17,54 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      player_balances: {
+        Row: {
+          player_id: string
+          balance: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          player_id: string
+          balance?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          player_id?: string
+          balance?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      scenario_stats: {
+        Row: {
+          player_id: string
+          scenario_key: string
+          attempts: number
+          wins: number
+          losses: number
+          updated_at: string
+        }
+        Insert: {
+          player_id: string
+          scenario_key: string
+          attempts?: number
+          wins?: number
+          losses?: number
+          updated_at?: string
+        }
+        Update: {
+          player_id?: string
+          scenario_key?: string
+          attempts?: number
+          wins?: number
+          losses?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
