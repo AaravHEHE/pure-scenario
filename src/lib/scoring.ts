@@ -30,3 +30,14 @@ export function applyResult(state: ScoringState, won: boolean, points: number): 
     },
   };
 }
+
+export interface UnlockResult {
+  ok: boolean;
+  balance: number;
+}
+
+/** Spends the unlock cost once, if affordable. Refused (unchanged balance) otherwise. */
+export function applyUnlock(balance: number, unlockCost: number): UnlockResult {
+  if (balance < unlockCost) return { ok: false, balance };
+  return { ok: true, balance: balance - unlockCost };
+}

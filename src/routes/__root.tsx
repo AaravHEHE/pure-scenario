@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SiteHeader } from "../components/site-header";
 import { SoundSettingsProvider } from "../hooks/use-sound-settings";
+import { GameDataProvider } from "../hooks/use-game-data";
 
 function NotFoundComponent() {
   return (
@@ -125,11 +126,13 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <SoundSettingsProvider>
-        <SiteHeader />
-        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-        <Outlet />
-      </SoundSettingsProvider>
+      <GameDataProvider>
+        <SoundSettingsProvider>
+          <SiteHeader />
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <Outlet />
+        </SoundSettingsProvider>
+      </GameDataProvider>
     </QueryClientProvider>
   );
 }
