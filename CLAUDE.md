@@ -82,34 +82,71 @@ Three routes only. No homepage.
 Header on every route: wordmark (left), Stats + Leaderboard links (center),
 Sign in button + sound on/off toggle (right, muted by default).
 
-## The scenario ladder
+## The scenario ladder & economy
 
 Every scenario needs its own animation and its own interactive element
-(pick-before-reveal). Points are hand-tuned to scale superlinearly with
-rarity — do not replace this table with a formula.
+(pick-before-reveal). Points and costs are hand-tuned, not formula-generated
+at runtime — do not replace this table with a live calculation.
 
-| # | Scenario | Odds | Win points | Attempt cost |
-|---|---|---|---|---|
-| 1 | Coin flip | 1/2 | 1 | — |
-| 2 | Rock paper scissors vs RNG | 1/3 | 2 | — |
-| 3 | Card suit | 1/4 | 4 | — |
-| 4 | Dice roll | 1/6 | 7 | — |
-| 5 | Roulette number | 1/37 | 40 | — |
-| 6 | Exact card from a deck | 1/52 | 50 | — |
-| 7 | Minute in the hour | 1/60 | 75 | — |
-| 8 | Number 1–100 | 1/100 | 125 | — |
-| 9 | Slots, three matching | 1/1,000 | 1,500 | 6 |
-| 10 | Legendary drop | 1/4,096 | 7,500 | 7 |
-| 11 | Number 1–1,000,000 | 1/1,000,000 | 3,000,000 | 12 |
+**Bands 1–2 are always free.** No unlock cost, no attempt cost, playable by
+anyone including guests, forever.
 
-**Attempt cost rules (bands 9–11 only):**
-- Charged on every attempt, win or lose.
-- Balance can never go negative. Disable the button (with a tooltip showing
-  the cost) when the player can't afford it.
-- New players start at 0 points. The only way to afford bands 9–11 is to
-  earn points on bands 1–8 first.
+**Bands 3–11 each require a one-time unlock cost, then a per-attempt cost
+charged on every attempt (win or lose).**
 
-## Auth & data rules
+| # | Scenario | Odds | Win pts | Unlock cost | Attempt cost |
+|---|---|---|---|---|---|
+| 1 | Coin flip | 1/2 | 1 | free | free |
+| 2 | Rock paper scissors vs RNG | 1/3 | 2 | free | free |
+| 3 | Card suit | 1/4 | 4 | 25 | 4 |
+| 4 | Dice roll | 1/6 | 7 | 50 | 5 |
+| 5 | Roulette number | 1/37 | 40 | 100 | 4 |
+| 6 | Exact card from a deck | 1/52 | 50 | 150 | 4 |
+| 7 | Minute in the hour | 1/60 | 75 | 250 | 5 |
+| 8 | Number 1–100 | 1/100 | 125 | 400 | 5 |
+| 9 | Slots, three matching | 1/1,000 | 1,500 | 750 | 6 |
+| 10 | Legendary drop | 1/4,096 | 7,500 | 1,500 | 7 |
+| 11 | Number 1–1,000,000 | 1/1,000,000 | 3,000,000 | 5,000 | 12 |
+
+**Economy rules:**
+- Balance can never go negative. Disable the attempt button (with a tooltip
+  showing the cost) when the player can't afford a single attempt.
+- New players/guests start at 0 points. The only way to afford unlocking
+  band 3 is earning points on bands 1–2 first — and each subsequent unlock
+  is funded the same way, by playing whatever's already unlocked.
+- Once a band is unlocked, it **stays visibly unlocked** — never re-locks
+  itself. Only the attempt button disables when the balance can't cover the
+  attempt cost. A locked band looks visually dimmed and displays its unlock
+  price; it does not look identical to an unlocked-but-unaffordable band.
+
+## Guests vs. accounts — persistence
+
+**Signed-in accounts persist everything, permanently, via Supabase:**
+total point balance, total amount spent, every band ever unlocked, and
+per-scenario attempts/wins/losses. This is the only source of truth for
+`/stats` and `/leaderboard` for that user.
+
+**Guests get none of this persisted.** Guest balance, unlocks, and stats
+live in plain client-side state (React context/state) for the current page
+load only. There is no localStorage guest ID and no server-side guest
+record. Reloading or closing the tab erases everything for a guest, by
+design.
+
+**Sign-in transfer:** if a guest signs in during the same session, before
+reloading, their current in-memory progress (balance, unlocks, stats)
+transfers directly into their new account. There is no merge system beyond
+this single in-session transfer — if the guest already reloaded, there is
+nothing left to transfer.
+
+**Guest reload-warning dialog:** show a warning every time a guest unlocks a
+new paid band (unlock events only — not on regular attempts). It must
+communicate that reloading or closing the tab will erase their progress,
+including the unlock they just bought, and that signing in saves it
+permanently. Include a checkbox to acknowledge and suppress further
+warnings for the rest of the session (wording is flexible; the intent is
+fixed). This dialog never appears for signed-in users.
+
+## Auth & display name rules
 
 - Google OAuth and email/password, both require email verification before
   the account is usable.
@@ -117,13 +154,8 @@ rarity — do not replace this table with a formula.
   leaderboard. Check it against a profanity blacklist and a uniqueness
   constraint — **both enforced server-side in an Edge Function**, never
   client-side only.
-- Anonymous play is fully supported. Track guest progress against a UUID
-  stored in `localStorage`.
-- On first sign-in, run an Edge Function that merges the guest UUID's
-  progress into the new account. Cap this at **one merge per account, ever**
-  — do not let repeated sign-ins re-merge or double-count.
-- Leaderboard inclusion requires a signed-in account. Anonymous players
-  never appear on it.
+- Leaderboard inclusion requires a signed-in account. Guests never appear
+  on it.
 
 ## Sound
 

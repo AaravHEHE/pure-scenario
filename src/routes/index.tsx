@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { CoinFlipBand } from "@/components/scenario-bands/coin-flip-band";
 import { RockPaperScissorsBand } from "@/components/scenario-bands/rock-paper-scissors-band";
+import { CardSuitBand } from "@/components/scenario-bands/card-suit-band";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -22,33 +23,12 @@ export const Route = createFileRoute("/")({
   component: GamePage,
 });
 
-const placeholderBands = [
-  { key: "band-3", bg: "bg-forest", text: "text-on-dark", slot: "border-on-dark" },
-] as const;
-
 function GamePage() {
   return (
     <main>
       <CoinFlipBand />
       <RockPaperScissorsBand />
-      {placeholderBands.map((band) => (
-        <section
-          key={band.key}
-          className={`flex min-h-[78vh] w-full flex-col items-center justify-center gap-8 px-4 py-16 ${band.bg} ${band.text}`}
-        >
-          <h1 className="text-center font-display text-5xl leading-none sm:text-7xl">Scenario 1</h1>
-          <div
-            aria-label="scenario slot"
-            className={`aspect-square w-56 border-2 sm:w-72 ${band.slot}`}
-          />
-          <button
-            type="button"
-            className={`border-2 px-10 py-3 font-sans text-sm uppercase tracking-widest ${band.slot}`}
-          >
-            Start
-          </button>
-        </section>
-      ))}
+      <CardSuitBand />
     </main>
   );
 }

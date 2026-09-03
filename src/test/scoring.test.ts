@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { applyAttempt, applyResult, EMPTY_STATS, type ScoringState } from "@/lib/scoring";
+import {
+  applyAttempt,
+  applyResult,
+  applyUnlock,
+  EMPTY_STATS,
+  type ScoringState,
+} from "@/lib/scoring";
 
 describe("applyAttempt (balance logic)", () => {
   it("charges the attempt cost and logs one attempt", () => {
@@ -55,5 +61,19 @@ describe("applyResult (win/loss recording)", () => {
     const next = applyResult(state, true, 1);
 
     expect(next.stats.attempts).toBe(1);
+  });
+});
+
+describe("applyUnlock (unlock cost logic)", () => {
+  it("succeeds and deducts the unlock cost when affordable", () => {
+    expect(applyUnlock(30, 25)).toEqual({ ok: true, balance: 5 });
+  });
+
+  it("succeeds when the balance exactly covers the cost", () => {
+    expect(applyUnlock(25, 25)).toEqual({ ok: true, balance: 0 });
+  });
+
+  it("is refused and changes nothing when not affordable", () => {
+    expect(applyUnlock(10, 25)).toEqual({ ok: false, balance: 10 });
   });
 });
