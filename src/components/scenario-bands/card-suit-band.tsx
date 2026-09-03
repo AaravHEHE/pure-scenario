@@ -31,6 +31,10 @@ export function CardSuitBand() {
   const [pick, setPick] = useState<Suit | null>(null);
   const [phase, setPhase] = useState<Phase>("idle");
   const [result, setResult] = useState<Suit | null>(null);
+  // Accumulates forward across draws — never resets to a smaller angle, so
+  // the CSS transition always spins forward instead of visually whipping
+  // backward through several turns to reach an equivalent angle.
+  const [rotation, setRotation] = useState(0);
   const reducedMotion = usePrefersReducedMotion();
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -67,11 +71,15 @@ export function CardSuitBand() {
       return;
     }
 
-    setPhase("drawing");
+    // Decided now, at the moment of the draw — not in advance — so the
+    // animation can spin straight to the correct final angle in one motion.
+    const outcome = drawSuit();
+    const won = outcome === pick;
 
-    const settle = async () => {
-      const outcome = drawSuit();
-      const won = outcome === pick;
+    setPhase("drawing");
+    setRotation((prev) => prev + 1800 + 180);
+
+    const reveal = async () => {
       setResult(outcome);
       setPhase("result");
       audioManager.play(won ? "win" : "lose");
@@ -88,9 +96,9 @@ export function CardSuitBand() {
     };
 
     if (reducedMotion) {
-      void settle();
+      void reveal();
     } else {
-      timeoutRef.current = setTimeout(() => void settle(), DRAW_DURATION_MS);
+      timeoutRef.current = setTimeout(() => void reveal(), DRAW_DURATION_MS);
     }
   }
 
@@ -127,8 +135,6 @@ export function CardSuitBand() {
       </section>
     );
   }
-
-  const rotation = phase === "drawing" ? 1800 : phase === "result" ? 180 : 0;
 
   return (
     <section className="flex min-h-[78vh] w-full flex-col items-center justify-center gap-8 bg-forest px-4 py-16 text-on-dark">
