@@ -40,6 +40,23 @@
   --locked-scrim: color-mix(in srgb, var(--ink) 50%, transparent);
   --on-locked: var(--base);
 
+  /* shadcn/ui semantic slots, mapped onto this palette so their classes resolve. */
+  --primary: var(--ink);
+  --primary-foreground: var(--base);
+  --secondary: var(--base);
+  --secondary-foreground: var(--ink);
+  --muted: var(--base);
+  --muted-foreground: color-mix(in srgb, var(--ink) 70%, var(--base));
+  --accent: color-mix(in srgb, var(--ink) 8%, var(--base));
+  --accent-foreground: var(--ink);
+  --destructive: var(--tomato);
+  --destructive-foreground: var(--on-tomato);
+  --card: var(--base);
+  --card-foreground: var(--ink);
+  --popover: var(--base);
+  --popover-foreground: var(--ink);
+  --input: var(--border);
+  --ring: var(--ink);
 }
 
 @theme inline {
@@ -62,6 +79,22 @@
   --color-on-clay: var(--on-clay);
   --color-locked-scrim: var(--locked-scrim);
   --color-on-locked: var(--on-locked);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 
   --font-display: "Instrument Serif", Georgia, serif;
   --font-sans: "Public Sans", system-ui, sans-serif;
