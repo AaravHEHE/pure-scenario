@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 import { audioManager } from "@/lib/audio-manager";
 import { drawSuit, SUITS, type Suit } from "@/lib/card-suit";
@@ -16,8 +16,22 @@ import { LockIcon } from "@/components/icons/lock-icon";
 
 const SCENARIO = SCENARIOS["card-suit"];
 const DRAW_DURATION_MS = 900;
+// Every draw starts from 0deg and lands here: 5.5 turns, so the back face (which
+// carries the drawn suit) ends up toward the viewer. Never accumulates across draws.
+const SPIN_DEGREES = 1980;
+const CARD_THICKNESS_PX = 4;
+// Solid layers stacked between the two faces form the card's edge mid-spin.
+const EDGE_OFFSETS_PX = Array.from(
+  { length: CARD_THICKNESS_PX - 1 },
+  (_, i) => i - (CARD_THICKNESS_PX - 2) / 2,
+);
 
 type Phase = "idle" | "drawing" | "result";
+
+interface PlayedDraw {
+  pick: Suit;
+  outcome: Suit;
+}
 
 const suitLabel: Record<Suit, string> = {
   hearts: "Hearts",
@@ -26,15 +40,21 @@ const suitLabel: Record<Suit, string> = {
   spades: "Spades",
 };
 
+const hiddenBackface: CSSProperties = {
+  backfaceVisibility: "hidden",
+  WebkitBackfaceVisibility: "hidden",
+};
+
+const faceClass =
+  "absolute inset-0 flex flex-col items-center justify-center gap-2 border-2 border-on-dark bg-forest px-4 text-center font-display text-xl sm:text-2xl";
+
 export function CardSuitBand() {
   const unlocked = useIsScenarioUnlocked(SCENARIO.key);
   const [pick, setPick] = useState<Suit | null>(null);
   const [phase, setPhase] = useState<Phase>("idle");
-  const [result, setResult] = useState<Suit | null>(null);
-  // Accumulates forward across draws — never resets to a smaller angle, so
-  // the CSS transition always spins forward instead of visually whipping
-  // backward through several turns to reach an equivalent angle.
-  const [rotation, setRotation] = useState(0);
+  // Snapshot of what was actually played, taken when the draw is triggered.
+  // Everything on the result screen reads from this, never from `pick`.
+  const [played, setPlayed] = useState<PlayedDraw | null>(null);
   const reducedMotion = usePrefersReducedMotion();
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -61,7 +81,8 @@ export function CardSuitBand() {
   }
 
   async function handleDraw() {
-    if (!pick || phase === "drawing" || !canAffordAttempt) return;
+    if (!pick || phase !== "idle" || !canAffordAttempt) return;
+    const pickedSuit = pick;
 
     audioManager.play("click");
 
@@ -71,16 +92,14 @@ export function CardSuitBand() {
       return;
     }
 
-    // Decided now, at the moment of the draw — not in advance — so the
-    // animation can spin straight to the correct final angle in one motion.
+    // Decided now, at the moment of the draw — not in advance.
     const outcome = drawSuit();
-    const won = outcome === pick;
+    const won = outcome === pickedSuit;
 
+    setPlayed({ pick: pickedSuit, outcome });
     setPhase("drawing");
-    setRotation((prev) => prev + 1800 + 180);
 
     const reveal = async () => {
-      setResult(outcome);
       setPhase("result");
       audioManager.play(won ? "win" : "lose");
 
@@ -105,7 +124,7 @@ export function CardSuitBand() {
   function handleDrawAgain() {
     setPick(null);
     setPhase("idle");
-    setResult(null);
+    setPlayed(null);
   }
 
   if (!unlocked) {
@@ -136,6 +155,15 @@ export function CardSuitBand() {
     );
   }
 
+  // Idle snaps back to 0deg with no transition, so the prompt is always on the
+  // front face, right-reading, and the next draw starts from the same baseline.
+  const rotation = phase === "idle" ? 0 : SPIN_DEGREES;
+  const animating = phase === "drawing" && !reducedMotion;
+  const won = played !== null && played.outcome === played.pick;
+  const shownPick = played?.pick ?? pick;
+
+  const frontText = shownPick ? `Picked: ${suitLabel[shownPick]}` : "Pick a suit";
+
   return (
     <section className="flex min-h-[78vh] w-full flex-col items-center justify-center gap-8 bg-forest px-4 py-16 text-on-dark">
       <h1 className="text-center font-display text-5xl leading-none sm:text-7xl">Scenario 3</h1>
@@ -144,19 +172,59 @@ export function CardSuitBand() {
       <div className="[perspective:800px]">
         <div
           aria-live="polite"
-          className="flex aspect-[5/7] w-40 flex-col items-center justify-center gap-2 border-2 border-on-dark px-4 text-center font-display text-xl transition-transform duration-[900ms] ease-out sm:w-52 sm:text-2xl"
-          style={reducedMotion ? undefined : { transform: `rotateY(${rotation}deg)` }}
+          // Purely visual. Edge-on 3D planes hit-test unpredictably in Chrome and
+          // were measured intercepting clicks meant for the buttons below.
+          className={`pointer-events-none relative aspect-[5/7] w-40 sm:w-52 ${
+            animating ? "transition-transform duration-[900ms] ease-out" : ""
+          }`}
+          style={{ transformStyle: "preserve-3d", transform: `rotateY(${rotation}deg)` }}
         >
-          {phase === "result" && result ? (
-            <>
-              <SuitIcon suit={result} className="h-10 w-10 sm:h-12 sm:w-12" />
-              <span>{suitLabel[result]}</span>
-            </>
-          ) : pick ? (
-            `Picked: ${suitLabel[pick]}`
-          ) : (
-            "Pick a suit"
-          )}
+          {EDGE_OFFSETS_PX.map((z) => (
+            <div
+              key={z}
+              aria-hidden="true"
+              className="absolute inset-0 bg-on-dark"
+              style={{ transform: `translateZ(${z}px)` }}
+            />
+          ))}
+          {/* The stacked layers vanish when exactly edge-on; this strip is the edge at 90deg. */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-y-0 left-1/2 bg-on-dark"
+            style={{
+              width: CARD_THICKNESS_PX,
+              marginLeft: -CARD_THICKNESS_PX / 2,
+              transform: "rotateY(90deg)",
+            }}
+          />
+
+          <div
+            data-face="front"
+            aria-hidden={phase === "result"}
+            className={faceClass}
+            style={{ ...hiddenBackface, transform: `translateZ(${CARD_THICKNESS_PX / 2}px)` }}
+          >
+            {frontText}
+          </div>
+          <div
+            data-face="back"
+            aria-hidden={phase !== "result"}
+            className={faceClass}
+            style={{
+              ...hiddenBackface,
+              transform: `rotateY(180deg) translateZ(${CARD_THICKNESS_PX / 2}px)`,
+            }}
+          >
+            {played && phase === "result" ? (
+              <>
+                <SuitIcon suit={played.outcome} className="h-10 w-10 sm:h-12 sm:w-12" />
+                <span>{suitLabel[played.outcome]}</span>
+              </>
+            ) : played ? (
+              // Mid-draw the back face repeats the pick so the suit can't leak before the reveal.
+              `Picked: ${suitLabel[played.pick]}`
+            ) : null}
+          </div>
         </div>
       </div>
 
@@ -165,11 +233,11 @@ export function CardSuitBand() {
           <button
             key={suit}
             type="button"
-            disabled={phase === "drawing"}
-            aria-pressed={pick === suit}
+            disabled={phase !== "idle"}
+            aria-pressed={shownPick === suit}
             onClick={() => setPick(suit)}
             className={`flex items-center gap-2 border-2 border-on-dark px-4 py-3 font-sans text-sm uppercase tracking-widest ${
-              pick === suit ? "bg-on-dark text-forest" : ""
+              shownPick === suit ? "bg-on-dark text-forest" : ""
             }`}
           >
             <SuitIcon suit={suit} className="h-4 w-4" />
@@ -181,7 +249,7 @@ export function CardSuitBand() {
       {phase === "result" ? (
         <div className="flex flex-col items-center gap-4">
           <p className="font-sans text-sm uppercase tracking-widest">
-            {result === pick ? "You won — +4 points" : "You lost"}
+            {won ? "You won — +4 points" : "You lost"}
           </p>
           <button
             type="button"

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 import { audioManager } from "@/lib/audio-manager";
 import { flipCoin, type CoinSide } from "@/lib/coin-flip";
@@ -8,19 +8,39 @@ import { SCENARIOS } from "@/lib/scenarios";
 
 const SCENARIO = SCENARIOS["coin-flip"];
 const FLIP_DURATION_MS = 900;
+// Every flip starts from 0deg and lands here: 5.5 turns, so the back face (which
+// carries the result) ends up toward the viewer. Never accumulates across flips.
+const SPIN_DEGREES = 1980;
+const COIN_THICKNESS_PX = 8;
+// Solid discs stacked between the two faces form the coin's rim mid-spin.
+const RIM_OFFSETS_PX = Array.from(
+  { length: COIN_THICKNESS_PX - 1 },
+  (_, i) => i - (COIN_THICKNESS_PX - 2) / 2,
+);
 
 type Phase = "idle" | "flipping" | "result";
 
+interface PlayedFlip {
+  pick: CoinSide;
+  outcome: CoinSide;
+}
+
 const sideLabel: Record<CoinSide, string> = { heads: "Heads", tails: "Tails" };
+
+const hiddenBackface: CSSProperties = {
+  backfaceVisibility: "hidden",
+  WebkitBackfaceVisibility: "hidden",
+};
+
+const faceClass =
+  "absolute inset-0 flex items-center justify-center rounded-full border-2 border-on-dark bg-tomato px-4 text-center font-display text-3xl";
 
 export function CoinFlipBand() {
   const [pick, setPick] = useState<CoinSide | null>(null);
   const [phase, setPhase] = useState<Phase>("idle");
-  const [result, setResult] = useState<CoinSide | null>(null);
-  // Accumulates forward across flips — never resets to a smaller angle, so the
-  // CSS transition always spins forward to its target instead of visually
-  // whipping backward through several turns to reach an equivalent angle.
-  const [rotation, setRotation] = useState(0);
+  // Snapshot of what was actually played, taken when the flip is triggered.
+  // Everything on the result screen reads from this, never from `pick`.
+  const [played, setPlayed] = useState<PlayedFlip | null>(null);
   const reducedMotion = usePrefersReducedMotion();
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -31,7 +51,8 @@ export function CoinFlipBand() {
   useEffect(() => () => clearTimeout(timeoutRef.current), []);
 
   async function handleFlip() {
-    if (!pick || phase === "flipping") return;
+    if (!pick || phase !== "idle") return;
+    const pickedSide = pick;
 
     audioManager.play("click");
 
@@ -41,16 +62,14 @@ export function CoinFlipBand() {
       return;
     }
 
-    // Decided now, at the moment of the flip — not in advance — so the
-    // animation can spin straight to the correct final angle in one motion.
+    // Decided now, at the moment of the flip — not in advance.
     const outcome = flipCoin();
-    const won = outcome === pick;
+    const won = outcome === pickedSide;
 
+    setPlayed({ pick: pickedSide, outcome });
     setPhase("flipping");
-    setRotation((prev) => prev + 1800 + (outcome === "tails" ? 180 : 0));
 
     const reveal = async () => {
-      setResult(outcome);
       setPhase("result");
       audioManager.play(won ? "win" : "lose");
 
@@ -75,8 +94,26 @@ export function CoinFlipBand() {
   function handlePlayAgain() {
     setPick(null);
     setPhase("idle");
-    setResult(null);
+    setPlayed(null);
   }
+
+  // Idle snaps back to 0deg with no transition, so the prompt is always on the
+  // front face, right-reading, and the next flip starts from the same baseline.
+  const rotation = phase === "idle" ? 0 : SPIN_DEGREES;
+  const animating = phase === "flipping" && !reducedMotion;
+  const won = played !== null && played.outcome === played.pick;
+
+  const frontText = played
+    ? `Picked: ${sideLabel[played.pick]}`
+    : pick
+      ? `Picked: ${sideLabel[pick]}`
+      : "Pick a side";
+  // Mid-flip the back face repeats the pick so the outcome can't leak before the reveal.
+  const backText = played
+    ? phase === "result"
+      ? sideLabel[played.outcome]
+      : `Picked: ${sideLabel[played.pick]}`
+    : "";
 
   return (
     <section className="flex min-h-[78vh] w-full flex-col items-center justify-center gap-8 bg-tomato px-4 py-16 text-on-dark">
@@ -86,14 +123,51 @@ export function CoinFlipBand() {
       <div className="[perspective:800px]">
         <div
           aria-live="polite"
-          className="flex aspect-square w-56 items-center justify-center rounded-full border-2 border-on-dark px-4 text-center font-display text-3xl transition-transform duration-[900ms] ease-out sm:w-72"
-          style={reducedMotion ? undefined : { transform: `rotateY(${rotation}deg)` }}
+          // Purely visual. Edge-on 3D planes hit-test unpredictably in Chrome and
+          // were measured intercepting clicks meant for the buttons below.
+          className={`pointer-events-none relative aspect-square w-56 sm:w-72 ${
+            animating ? "transition-transform duration-[900ms] ease-out" : ""
+          }`}
+          style={{ transformStyle: "preserve-3d", transform: `rotateY(${rotation}deg)` }}
         >
-          {phase === "result" && result
-            ? sideLabel[result]
-            : pick
-              ? `Picked: ${sideLabel[pick]}`
-              : "Pick a side"}
+          {RIM_OFFSETS_PX.map((z) => (
+            <div
+              key={z}
+              aria-hidden="true"
+              className="absolute inset-0 rounded-full bg-on-dark"
+              style={{ transform: `translateZ(${z}px)` }}
+            />
+          ))}
+          {/* The stacked discs vanish when exactly edge-on; this strip is the rim at 90deg. */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-y-0 left-1/2 bg-on-dark"
+            style={{
+              width: COIN_THICKNESS_PX,
+              marginLeft: -COIN_THICKNESS_PX / 2,
+              transform: "rotateY(90deg)",
+            }}
+          />
+
+          <div
+            data-face="front"
+            aria-hidden={phase === "result"}
+            className={faceClass}
+            style={{ ...hiddenBackface, transform: `translateZ(${COIN_THICKNESS_PX / 2}px)` }}
+          >
+            {frontText}
+          </div>
+          <div
+            data-face="back"
+            aria-hidden={phase !== "result"}
+            className={faceClass}
+            style={{
+              ...hiddenBackface,
+              transform: `rotateY(180deg) translateZ(${COIN_THICKNESS_PX / 2}px)`,
+            }}
+          >
+            {backText}
+          </div>
         </div>
       </div>
 
@@ -102,11 +176,11 @@ export function CoinFlipBand() {
           <button
             key={side}
             type="button"
-            disabled={phase === "flipping"}
-            aria-pressed={pick === side}
+            disabled={phase !== "idle"}
+            aria-pressed={(played?.pick ?? pick) === side}
             onClick={() => setPick(side)}
             className={`border-2 border-on-dark px-8 py-3 font-sans text-sm uppercase tracking-widest ${
-              pick === side ? "bg-on-dark text-tomato" : ""
+              (played?.pick ?? pick) === side ? "bg-on-dark text-tomato" : ""
             }`}
           >
             {sideLabel[side]}
@@ -117,7 +191,7 @@ export function CoinFlipBand() {
       {phase === "result" ? (
         <div className="flex flex-col items-center gap-4">
           <p className="font-sans text-sm uppercase tracking-widest">
-            {result === pick ? "You won — +1 point" : "You lost"}
+            {won ? "You won — +1 point" : "You lost"}
           </p>
           <button
             type="button"

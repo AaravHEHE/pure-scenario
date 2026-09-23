@@ -22,6 +22,9 @@ const throwLabel: Record<Throw, string> = { rock: "Rock", paper: "Paper", scisso
 export function RockPaperScissorsBand() {
   const [pick, setPick] = useState<Throw | null>(null);
   const [phase, setPhase] = useState<Phase>("idle");
+  // Snapshot of the throw actually played, taken when the throw is triggered.
+  // The "You" slot reads from this outside idle, never from `pick`.
+  const [playedThrow, setPlayedThrow] = useState<Throw | null>(null);
   const [rngThrow, setRngThrow] = useState<Throw | null>(null);
   const [outcome, setOutcome] = useState<ThrowOutcome | null>(null);
   const reducedMotion = usePrefersReducedMotion();
@@ -34,7 +37,8 @@ export function RockPaperScissorsBand() {
   useEffect(() => () => clearTimeout(timeoutRef.current), []);
 
   async function handleThrow() {
-    if (!pick || phase === "suspense") return;
+    if (!pick || phase !== "idle") return;
+    const thrown = pick;
 
     audioManager.play("click");
 
@@ -44,11 +48,12 @@ export function RockPaperScissorsBand() {
       return;
     }
 
+    setPlayedThrow(thrown);
     setPhase("suspense");
 
     const reveal = async () => {
       const rng = randomThrow();
-      const result = resolveThrow(pick, rng);
+      const result = resolveThrow(thrown, rng);
       setRngThrow(rng);
       setOutcome(result);
       setPhase("result");
@@ -75,9 +80,12 @@ export function RockPaperScissorsBand() {
   function handlePlayAgain() {
     setPick(null);
     setPhase("idle");
+    setPlayedThrow(null);
     setRngThrow(null);
     setOutcome(null);
   }
+
+  const shownThrow = phase === "idle" ? pick : playedThrow;
 
   return (
     <section className="flex min-h-[78vh] w-full flex-col items-center justify-center gap-8 bg-mustard px-4 py-16 text-on-light">
@@ -90,7 +98,7 @@ export function RockPaperScissorsBand() {
         <div className="flex flex-col items-center gap-2">
           <span className="font-sans text-xs uppercase tracking-widest">You</span>
           <div className="flex h-28 w-28 items-center justify-center rounded-full border-2 border-on-light px-2 text-center font-display text-xl sm:h-36 sm:w-36 sm:text-2xl">
-            {pick ? throwLabel[pick] : "?"}
+            {shownThrow ? throwLabel[shownThrow] : "?"}
           </div>
         </div>
 
@@ -113,11 +121,11 @@ export function RockPaperScissorsBand() {
           <button
             key={throwOption}
             type="button"
-            disabled={phase === "suspense"}
-            aria-pressed={pick === throwOption}
+            disabled={phase !== "idle"}
+            aria-pressed={shownThrow === throwOption}
             onClick={() => setPick(throwOption)}
             className={`border-2 border-on-light px-6 py-3 font-sans text-sm uppercase tracking-widest ${
-              pick === throwOption ? "bg-on-light text-mustard" : ""
+              shownThrow === throwOption ? "bg-on-light text-mustard" : ""
             }`}
           >
             {throwLabel[throwOption]}
