@@ -24,6 +24,22 @@
   --on-light: var(--ink);
   --on-dark: var(--base);
   --border: rgb(26 22 20 / 15%);
+
+  /*
+   * Text color for each band, chosen by measured contrast — not by whether the
+   * band "looks" light or dark. Tomato reads as dark but only passes AA with ink.
+   * src/test/band-contrast.test.tsx fails if any pairing drops below 4.5:1.
+   */
+  --on-tomato: var(--ink);
+  --on-mustard: var(--ink);
+  --on-forest: var(--base);
+  --on-slate: var(--base);
+  --on-clay: var(--base);
+
+  /* Locked bands are dimmed by this scrim over the band color; their text stays opaque. */
+  --locked-scrim: color-mix(in srgb, var(--ink) 50%, transparent);
+  --on-locked: var(--base);
+
 }
 
 @theme inline {
@@ -39,6 +55,13 @@
   --color-on-light: var(--on-light);
   --color-on-dark: var(--on-dark);
   --color-border: var(--border);
+  --color-on-tomato: var(--on-tomato);
+  --color-on-mustard: var(--on-mustard);
+  --color-on-forest: var(--on-forest);
+  --color-on-slate: var(--on-slate);
+  --color-on-clay: var(--on-clay);
+  --color-locked-scrim: var(--locked-scrim);
+  --color-on-locked: var(--on-locked);
 
   --font-display: "Instrument Serif", Georgia, serif;
   --font-sans: "Public Sans", system-ui, sans-serif;

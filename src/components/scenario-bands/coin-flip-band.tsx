@@ -5,6 +5,7 @@ import { flipCoin, type CoinSide } from "@/lib/coin-flip";
 import { useAttemptScenario, useBalance, useRecordScenarioResult } from "@/hooks/use-game-data";
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import { SCENARIOS } from "@/lib/scenarios";
+import { BalanceChip } from "@/components/scenario-bands/balance-chip";
 
 const SCENARIO = SCENARIOS["coin-flip"];
 const FLIP_DURATION_MS = 900;
@@ -33,7 +34,7 @@ const hiddenBackface: CSSProperties = {
 };
 
 const faceClass =
-  "absolute inset-0 flex items-center justify-center rounded-full border-2 border-on-dark bg-tomato px-4 text-center font-display text-3xl";
+  "absolute inset-0 flex items-center justify-center rounded-full border-2 border-on-dark bg-tomato px-4 text-center font-display text-3xl text-on-dark";
 
 export function CoinFlipBand() {
   const [pick, setPick] = useState<CoinSide | null>(null);
@@ -116,8 +117,10 @@ export function CoinFlipBand() {
     : "";
 
   return (
-    <section className="flex min-h-[78vh] w-full flex-col items-center justify-center gap-8 bg-tomato px-4 py-16 text-on-dark">
-      <h1 className="text-center font-display text-5xl leading-none sm:text-7xl">Scenario 1</h1>
+    <section className="flex min-h-[78vh] w-full flex-col items-center justify-center gap-8 bg-tomato px-4 py-16 text-on-tomato">
+      <h1 className="text-center font-display text-5xl leading-none text-on-dark sm:text-7xl">
+        Scenario 1
+      </h1>
       <p className="font-sans text-sm uppercase tracking-widest">Coin flip · 1/2 odds · 1 point</p>
 
       <div className="[perspective:800px]">
@@ -179,8 +182,8 @@ export function CoinFlipBand() {
             disabled={phase !== "idle"}
             aria-pressed={(played?.pick ?? pick) === side}
             onClick={() => setPick(side)}
-            className={`border-2 border-on-dark px-8 py-3 font-sans text-sm uppercase tracking-widest ${
-              (played?.pick ?? pick) === side ? "bg-on-dark text-tomato" : ""
+            className={`border-2 border-on-tomato px-8 py-3 font-sans text-sm uppercase tracking-widest ${
+              (played?.pick ?? pick) === side ? "bg-on-tomato text-tomato" : ""
             }`}
           >
             {sideLabel[side]}
@@ -196,7 +199,7 @@ export function CoinFlipBand() {
           <button
             type="button"
             onClick={handlePlayAgain}
-            className="border-2 border-on-dark px-10 py-3 font-sans text-sm uppercase tracking-widest"
+            className="border-2 border-on-tomato px-10 py-3 font-sans text-sm uppercase tracking-widest"
           >
             Flip again
           </button>
@@ -206,15 +209,13 @@ export function CoinFlipBand() {
           type="button"
           disabled={!pick || phase === "flipping"}
           onClick={() => void handleFlip()}
-          className="border-2 border-on-dark px-10 py-3 font-sans text-sm uppercase tracking-widest disabled:opacity-50"
+          className="border-2 border-on-tomato px-10 py-3 font-sans text-sm uppercase tracking-widest disabled:opacity-50"
         >
           {phase === "flipping" ? "Flipping…" : "Flip"}
         </button>
       )}
 
-      <p className="font-sans text-xs uppercase tracking-widest text-on-dark/70">
-        Balance: {balance ?? 0}
-      </p>
+      <BalanceChip balance={balance ?? 0} />
     </section>
   );
 }

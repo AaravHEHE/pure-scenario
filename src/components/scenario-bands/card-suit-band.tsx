@@ -13,6 +13,7 @@ import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import { SCENARIOS } from "@/lib/scenarios";
 import { SuitIcon } from "@/components/scenario-bands/suit-icon";
 import { LockIcon } from "@/components/icons/lock-icon";
+import { BalanceChip } from "@/components/scenario-bands/balance-chip";
 
 const SCENARIO = SCENARIOS["card-suit"];
 const DRAW_DURATION_MS = 900;
@@ -46,7 +47,7 @@ const hiddenBackface: CSSProperties = {
 };
 
 const faceClass =
-  "absolute inset-0 flex flex-col items-center justify-center gap-2 border-2 border-on-dark bg-forest px-4 text-center font-display text-xl sm:text-2xl";
+  "absolute inset-0 flex flex-col items-center justify-center gap-2 border-2 border-on-forest bg-forest px-4 text-center font-display text-xl sm:text-2xl";
 
 export function CardSuitBand() {
   const unlocked = useIsScenarioUnlocked(SCENARIO.key);
@@ -129,28 +130,28 @@ export function CardSuitBand() {
 
   if (!unlocked) {
     return (
-      <section className="flex min-h-[78vh] w-full flex-col items-center justify-center gap-6 bg-forest px-4 py-16 text-on-dark">
-        <h1 className="text-center font-display text-5xl leading-none opacity-60 sm:text-7xl">
-          Scenario 3
-        </h1>
-        <p className="font-sans text-sm uppercase tracking-widest opacity-60">
-          Card suit · 1/4 odds · 4 points
-        </p>
-        <div className="flex aspect-[5/7] w-40 flex-col items-center justify-center gap-3 border-2 border-on-dark/40 px-4 text-center opacity-60 sm:w-52">
-          <LockIcon className="h-8 w-8" />
-          <span className="font-sans text-xs uppercase tracking-widest">Locked</span>
+      <section className="relative flex min-h-[78vh] w-full flex-col items-center justify-center bg-forest px-4 py-16 text-on-locked">
+        {/* The dimmed look comes from this scrim, never from fading text. */}
+        <div aria-hidden="true" className="absolute inset-0 bg-locked-scrim" />
+        <div className="relative flex flex-col items-center gap-6">
+          <h1 className="text-center font-display text-5xl leading-none sm:text-7xl">Scenario 3</h1>
+          <p className="font-sans text-sm uppercase tracking-widest">
+            Card suit · 1/4 odds · 4 points
+          </p>
+          <div className="flex aspect-[5/7] w-40 flex-col items-center justify-center gap-3 border-2 border-on-locked/40 px-4 text-center sm:w-52">
+            <LockIcon className="h-8 w-8" />
+            <span className="font-sans text-xs uppercase tracking-widest">Locked</span>
+          </div>
+          <button
+            type="button"
+            disabled={!canAffordUnlock}
+            onClick={() => void handleUnlock()}
+            className="border-2 border-on-locked px-10 py-3 font-sans text-sm uppercase tracking-widest disabled:cursor-not-allowed disabled:border-dashed"
+          >
+            Unlock for {SCENARIO.unlockCost} points
+          </button>
+          <BalanceChip balance={balance} />
         </div>
-        <button
-          type="button"
-          disabled={!canAffordUnlock}
-          onClick={() => void handleUnlock()}
-          className="border-2 border-on-dark px-10 py-3 font-sans text-sm uppercase tracking-widest disabled:opacity-50"
-        >
-          Unlock for {SCENARIO.unlockCost} points
-        </button>
-        <p className="font-sans text-xs uppercase tracking-widest text-on-dark/70">
-          Balance: {balance}
-        </p>
       </section>
     );
   }
@@ -165,7 +166,7 @@ export function CardSuitBand() {
   const frontText = shownPick ? `Picked: ${suitLabel[shownPick]}` : "Pick a suit";
 
   return (
-    <section className="flex min-h-[78vh] w-full flex-col items-center justify-center gap-8 bg-forest px-4 py-16 text-on-dark">
+    <section className="flex min-h-[78vh] w-full flex-col items-center justify-center gap-8 bg-forest px-4 py-16 text-on-forest">
       <h1 className="text-center font-display text-5xl leading-none sm:text-7xl">Scenario 3</h1>
       <p className="font-sans text-sm uppercase tracking-widest">Card suit · 1/4 odds · 4 points</p>
 
@@ -183,14 +184,14 @@ export function CardSuitBand() {
             <div
               key={z}
               aria-hidden="true"
-              className="absolute inset-0 bg-on-dark"
+              className="absolute inset-0 bg-on-forest"
               style={{ transform: `translateZ(${z}px)` }}
             />
           ))}
           {/* The stacked layers vanish when exactly edge-on; this strip is the edge at 90deg. */}
           <div
             aria-hidden="true"
-            className="absolute inset-y-0 left-1/2 bg-on-dark"
+            className="absolute inset-y-0 left-1/2 bg-on-forest"
             style={{
               width: CARD_THICKNESS_PX,
               marginLeft: -CARD_THICKNESS_PX / 2,
@@ -236,8 +237,8 @@ export function CardSuitBand() {
             disabled={phase !== "idle"}
             aria-pressed={shownPick === suit}
             onClick={() => setPick(suit)}
-            className={`flex items-center gap-2 border-2 border-on-dark px-4 py-3 font-sans text-sm uppercase tracking-widest ${
-              shownPick === suit ? "bg-on-dark text-forest" : ""
+            className={`flex items-center gap-2 border-2 border-on-forest px-4 py-3 font-sans text-sm uppercase tracking-widest ${
+              shownPick === suit ? "bg-on-forest text-forest" : ""
             }`}
           >
             <SuitIcon suit={suit} className="h-4 w-4" />
@@ -254,7 +255,7 @@ export function CardSuitBand() {
           <button
             type="button"
             onClick={handleDrawAgain}
-            className="border-2 border-on-dark px-10 py-3 font-sans text-sm uppercase tracking-widest"
+            className="border-2 border-on-forest px-10 py-3 font-sans text-sm uppercase tracking-widest"
           >
             Draw again
           </button>
@@ -264,15 +265,13 @@ export function CardSuitBand() {
           type="button"
           disabled={!pick || phase === "drawing" || !canAffordAttempt}
           onClick={() => void handleDraw()}
-          className="border-2 border-on-dark px-10 py-3 font-sans text-sm uppercase tracking-widest disabled:opacity-50"
+          className="border-2 border-on-forest px-10 py-3 font-sans text-sm uppercase tracking-widest disabled:opacity-50"
         >
           {phase === "drawing" ? "Drawing…" : `Draw (${SCENARIO.attemptCost} pts)`}
         </button>
       )}
 
-      <p className="font-sans text-xs uppercase tracking-widest text-on-dark/70">
-        Balance: {balance}
-      </p>
+      <BalanceChip balance={balance} />
     </section>
   );
 }
