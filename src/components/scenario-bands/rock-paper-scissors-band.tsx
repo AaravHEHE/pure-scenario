@@ -12,6 +12,7 @@ import { useAttemptScenario, useBalance, useRecordScenarioResult } from "@/hooks
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import { SCENARIOS } from "@/lib/scenarios";
 import { BalanceChip } from "@/components/scenario-bands/balance-chip";
+import { BandSubtitle } from "@/components/scenario-bands/band-subtitle";
 
 const SCENARIO = SCENARIOS["rock-paper-scissors"];
 const SUSPENSE_MS = 500;
@@ -91,9 +92,7 @@ export function RockPaperScissorsBand() {
   return (
     <section className="flex min-h-[78vh] w-full flex-col items-center justify-center gap-8 bg-mustard px-4 py-16 text-on-mustard">
       <h1 className="text-center font-display text-5xl leading-none sm:text-7xl">Scenario 2</h1>
-      <p className="font-sans text-sm uppercase tracking-widest">
-        Rock paper scissors vs RNG · 1/3 odds · 2 points
-      </p>
+      <BandSubtitle>Rock paper scissors vs RNG · 1/3 odds · 2 points</BandSubtitle>
 
       <div aria-live="polite" className="flex items-center gap-6 sm:gap-10">
         <div className="flex flex-col items-center gap-2">
@@ -107,17 +106,28 @@ export function RockPaperScissorsBand() {
 
         <div className="flex flex-col items-center gap-2">
           <span className="font-sans text-xs uppercase tracking-widest">RNG</span>
+          {/* Dashed and empty until the reveal, so the slot is visibly waiting rather than missing. */}
           <div
             className={`flex h-28 w-28 items-center justify-center rounded-full border-2 border-on-mustard px-2 text-center font-display text-xl sm:h-36 sm:w-36 sm:text-2xl ${
-              reducedMotion ? "" : "transition-all duration-300 ease-out"
-            } ${phase === "result" ? "scale-100 opacity-100" : "scale-90 opacity-0"}`}
+              phase === "result" ? "" : "border-dashed"
+            }`}
           >
-            {phase === "result" && rngThrow ? throwLabel[rngThrow] : ""}
+            <span
+              className={`${reducedMotion ? "" : "transition-all duration-300 ease-out"} ${
+                phase === "result" ? "scale-100 opacity-100" : "scale-90 opacity-0"
+              }`}
+            >
+              {phase === "result" && rngThrow ? throwLabel[rngThrow] : ""}
+            </span>
           </div>
         </div>
       </div>
 
-      <div role="group" aria-label="Pick rock, paper, or scissors" className="flex gap-4">
+      <div
+        role="group"
+        aria-label="Pick rock, paper, or scissors"
+        className="flex flex-wrap justify-center gap-3 sm:gap-4"
+      >
         {THROWS.map((throwOption) => (
           <button
             key={throwOption}
@@ -125,7 +135,7 @@ export function RockPaperScissorsBand() {
             disabled={phase !== "idle"}
             aria-pressed={shownThrow === throwOption}
             onClick={() => setPick(throwOption)}
-            className={`border-2 border-on-mustard px-6 py-3 font-sans text-sm uppercase tracking-widest ${
+            className={`border-2 border-on-mustard px-4 py-3 font-sans text-sm uppercase tracking-widest sm:px-6 ${
               shownThrow === throwOption ? "bg-on-mustard text-mustard" : ""
             }`}
           >
