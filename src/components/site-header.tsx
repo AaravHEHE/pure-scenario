@@ -13,7 +13,7 @@ export function SiteHeader() {
   const { enabled: soundEnabled, toggle: toggleSound } = useSoundSettings();
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-base">
+    <header className="w-full border-b bg-base">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <Link to="/" className="font-display text-2xl leading-none tracking-tight text-ink">
           purerandomness

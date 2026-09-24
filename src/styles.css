@@ -109,10 +109,12 @@
     border-color: var(--border);
   }
 
+  /* clip, not hidden: hidden turns body into a scroll container, which
+     breaks the sticky header (and the guest banner pinned with it). */
   html,
   body {
     max-width: 100%;
-    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   body {

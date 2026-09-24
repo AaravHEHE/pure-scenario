@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SiteHeader } from "../components/site-header";
+import { GuestBanner } from "../components/guest-banner";
 import { SoundSettingsProvider } from "../hooks/use-sound-settings";
 import { GameDataProvider } from "../hooks/use-game-data";
 
@@ -126,7 +127,11 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <GameDataProvider>
         <SoundSettingsProvider>
-          <SiteHeader />
+          {/* Header and guest banner pin together, so the banner never scrolls away. */}
+          <div className="sticky top-0 z-50">
+            <SiteHeader />
+            <GuestBanner />
+          </div>
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
         </SoundSettingsProvider>
