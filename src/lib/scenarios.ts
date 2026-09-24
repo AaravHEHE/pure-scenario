@@ -2,6 +2,7 @@ export type ScenarioKey = "coin-flip" | "rock-paper-scissors" | "card-suit";
 
 export interface ScenarioConfig {
   key: ScenarioKey;
+  name: string;
   winPoints: number;
   attemptCost: number;
   /** One-time cost to unlock the band. 0 = free forever, no unlock step. */
@@ -10,12 +11,19 @@ export interface ScenarioConfig {
 
 // Hand-tuned per the scenario ladder in CLAUDE.md — not a formula.
 export const SCENARIOS: Record<ScenarioKey, ScenarioConfig> = {
-  "coin-flip": { key: "coin-flip", winPoints: 1, attemptCost: 0, unlockCost: 0 },
+  "coin-flip": { key: "coin-flip", name: "Coin flip", winPoints: 1, attemptCost: 0, unlockCost: 0 },
   "rock-paper-scissors": {
     key: "rock-paper-scissors",
+    name: "Rock paper scissors",
     winPoints: 2,
     attemptCost: 0,
     unlockCost: 0,
   },
-  "card-suit": { key: "card-suit", winPoints: 4, attemptCost: 4, unlockCost: 25 },
+  "card-suit": {
+    key: "card-suit",
+    name: "Card suit",
+    winPoints: 4,
+    attemptCost: 4,
+    unlockCost: 25,
+  },
 };
