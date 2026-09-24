@@ -15,6 +15,7 @@ import { SuitIcon } from "@/components/scenario-bands/suit-icon";
 import { LockIcon } from "@/components/icons/lock-icon";
 import { BalanceChip } from "@/components/scenario-bands/balance-chip";
 import { BandSubtitle } from "@/components/scenario-bands/band-subtitle";
+import { CostButton } from "@/components/scenario-bands/cost-button";
 
 const SCENARIO = SCENARIOS["card-suit"];
 const DRAW_DURATION_MS = 900;
@@ -141,14 +142,14 @@ export function CardSuitBand() {
             <LockIcon className="h-8 w-8" />
             <span className="font-sans text-xs uppercase tracking-widest">Locked</span>
           </div>
-          <button
-            type="button"
-            disabled={!canAffordUnlock}
+          <CostButton
+            cost={SCENARIO.unlockCost}
+            balance={balance}
             onClick={() => void handleUnlock()}
-            className="border-2 border-on-locked px-10 py-3 font-sans text-sm uppercase tracking-widest disabled:cursor-not-allowed disabled:border-dashed"
+            className="border-2 border-on-locked px-10 py-3 font-sans text-sm uppercase tracking-widest aria-disabled:cursor-not-allowed aria-disabled:border-dashed"
           >
             Unlock for {SCENARIO.unlockCost} points
-          </button>
+          </CostButton>
           <BalanceChip balance={balance} />
         </div>
       </section>
@@ -260,14 +261,15 @@ export function CardSuitBand() {
           </button>
         </div>
       ) : (
-        <button
-          type="button"
-          disabled={!pick || phase === "drawing" || !canAffordAttempt}
+        <CostButton
+          cost={SCENARIO.attemptCost}
+          balance={balance}
+          disabled={!pick || phase === "drawing"}
           onClick={() => void handleDraw()}
-          className="border-2 border-on-forest px-10 py-3 font-sans text-sm uppercase tracking-widest disabled:opacity-50"
+          className="border-2 border-on-forest px-10 py-3 font-sans text-sm uppercase tracking-widest disabled:opacity-50 aria-disabled:opacity-50"
         >
           {phase === "drawing" ? "Drawing…" : `Draw (${SCENARIO.attemptCost} pts)`}
-        </button>
+        </CostButton>
       )}
 
       <BalanceChip balance={balance} />

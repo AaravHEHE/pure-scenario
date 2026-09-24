@@ -38,7 +38,11 @@ describe("CardSuitBand — locked state", () => {
     render(<CardSuitBand />);
 
     expect(screen.getByText("Locked")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /unlock for 25 points/i })).toBeDisabled();
+    // aria-disabled, not disabled, so the cost tooltip stays reachable by focus and tap.
+    const unlock = screen.getByRole("button", { name: /unlock for 25 points/i });
+    expect(unlock).toHaveAttribute("aria-disabled", "true");
+    fireEvent.click(unlock);
+    expect(unlockMutateAsync).not.toHaveBeenCalled();
   });
 
   it("enables the unlock button once affordable", () => {
@@ -73,7 +77,10 @@ describe("CardSuitBand — unlocked state", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Hearts" }));
 
-    expect(screen.getByRole("button", { name: /draw/i })).toBeDisabled();
+    const draw = screen.getByRole("button", { name: /draw/i });
+    expect(draw).toHaveAttribute("aria-disabled", "true");
+    fireEvent.click(draw);
+    expect(attemptMutateAsync).not.toHaveBeenCalled();
   });
 
   it("requires a pick before the draw button is enabled, when affordable", () => {
