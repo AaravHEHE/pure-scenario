@@ -1,4 +1,5 @@
-// Hand-patched to match supabase/migrations/20260823200000_add_points_system.sql —
+// Hand-patched to match supabase/migrations/20260823200000_add_points_system.sql
+// and 20260924000000_add_leaderboard.sql —
 // no DB credentials in this environment to run the real `supabase gen types` yet.
 // Regenerating from the live schema should produce an equivalent file.
 export type Json =
@@ -17,6 +18,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      leaderboard_entries: {
+        Row: {
+          user_id: string
+          display_name: string
+          total_points: number
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          display_name: string
+          total_points?: number
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          display_name?: string
+          total_points?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       player_balances: {
         Row: {
           player_id: string
