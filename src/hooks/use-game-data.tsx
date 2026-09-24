@@ -5,9 +5,10 @@ import {
   applyResult,
   applyUnlock,
   EMPTY_STATS,
+  totalPointsEarned,
   type ScenarioStats,
 } from "@/lib/scoring";
-import type { ScenarioKey } from "@/lib/scenarios";
+import { SCENARIOS, type ScenarioKey } from "@/lib/scenarios";
 
 export type { ScenarioStats };
 
@@ -67,6 +68,14 @@ export function useBalance() {
 export function useScenarioStats(scenarioKey: ScenarioKey) {
   const { state } = useGameDataContext();
   return { data: state.stats[scenarioKey] ?? EMPTY_STATS };
+}
+
+/** Points won this session, from the same stats (wins x each band's win points). */
+export function useTotalPointsEarned() {
+  const { state } = useGameDataContext();
+  return {
+    data: totalPointsEarned(state.stats, (key) => SCENARIOS[key as ScenarioKey]?.winPoints ?? 0),
+  };
 }
 
 export function useIsScenarioUnlocked(scenarioKey: ScenarioKey): boolean {
