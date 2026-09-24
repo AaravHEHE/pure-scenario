@@ -21,10 +21,9 @@ export function SuitIcon({ suit, className }: SuitIconProps) {
         </>
       )}
       {suit === "spades" && (
-        <>
-          <path d="M12,2 C12,2 21,10 21,15.5 C21,18.58 18.58,21 15.5,21 C13.76,21 12.5,20.19 12,19 C11.5,20.19 10.24,21 8.5,21 C5.42,21 3,18.58 3,15.5 C3,10 12,2 12,2 Z" />
-          <path d="M10.2,17 L13.8,17 L12.6,23 L11.4,23 Z" />
-        </>
+        // One path: pointed top, two lobes, and a stem that flares out at the base.
+        // A stem that tapers instead reads as a teardrop at 16px.
+        <path d="M12,1.5 C12,1.5 2.5,8.5 2.5,14 C2.5,16.9 4.7,19 7.3,19 C8.9,19 10.2,18.3 11,17.2 C10.9,19.4 10.2,21.2 8.5,22.5 L15.5,22.5 C13.8,21.2 13.1,19.4 13,17.2 C13.8,18.3 15.1,19 16.7,19 C19.3,19 21.5,16.9 21.5,14 C21.5,8.5 12,1.5 12,1.5 Z" />
       )}
     </svg>
   );
