@@ -14,6 +14,7 @@ import { SCENARIOS } from "@/lib/scenarios";
 import { SuitIcon } from "@/components/scenario-bands/suit-icon";
 import { LockIcon } from "@/components/icons/lock-icon";
 import { BalanceChip } from "@/components/scenario-bands/balance-chip";
+import { BandSubtitle } from "@/components/scenario-bands/band-subtitle";
 
 const SCENARIO = SCENARIOS["card-suit"];
 const DRAW_DURATION_MS = 900;
@@ -135,9 +136,7 @@ export function CardSuitBand() {
         <div aria-hidden="true" className="absolute inset-0 bg-locked-scrim" />
         <div className="relative flex flex-col items-center gap-6">
           <h1 className="text-center font-display text-5xl leading-none sm:text-7xl">Scenario 3</h1>
-          <p className="font-sans text-sm uppercase tracking-widest">
-            Card suit · 1/4 odds · 4 points
-          </p>
+          <BandSubtitle>Card suit · 1/4 odds · 4 points</BandSubtitle>
           <div className="flex aspect-[5/7] w-40 flex-col items-center justify-center gap-3 border-2 border-on-locked/40 px-4 text-center sm:w-52">
             <LockIcon className="h-8 w-8" />
             <span className="font-sans text-xs uppercase tracking-widest">Locked</span>
@@ -168,7 +167,7 @@ export function CardSuitBand() {
   return (
     <section className="flex min-h-[78vh] w-full flex-col items-center justify-center gap-8 bg-forest px-4 py-16 text-on-forest">
       <h1 className="text-center font-display text-5xl leading-none sm:text-7xl">Scenario 3</h1>
-      <p className="font-sans text-sm uppercase tracking-widest">Card suit · 1/4 odds · 4 points</p>
+      <BandSubtitle>Card suit · 1/4 odds · 4 points</BandSubtitle>
 
       <div className="[perspective:800px]">
         <div

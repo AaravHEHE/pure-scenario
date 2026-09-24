@@ -6,6 +6,7 @@ import { useAttemptScenario, useBalance, useRecordScenarioResult } from "@/hooks
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import { SCENARIOS } from "@/lib/scenarios";
 import { BalanceChip } from "@/components/scenario-bands/balance-chip";
+import { BandSubtitle } from "@/components/scenario-bands/band-subtitle";
 
 const SCENARIO = SCENARIOS["coin-flip"];
 const FLIP_DURATION_MS = 900;
@@ -121,7 +122,7 @@ export function CoinFlipBand() {
       <h1 className="text-center font-display text-5xl leading-none text-on-dark sm:text-7xl">
         Scenario 1
       </h1>
-      <p className="font-sans text-sm uppercase tracking-widest">Coin flip · 1/2 odds · 1 point</p>
+      <BandSubtitle>Coin flip · 1/2 odds · 1 point</BandSubtitle>
 
       <div className="[perspective:800px]">
         <div
