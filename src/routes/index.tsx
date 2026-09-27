@@ -11,12 +11,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "purerandomness game shell: three full-bleed scenario bands with placeholder slots and start actions.",
+          "A ladder of pure-chance games, easiest odds first: flip a coin, throw rock paper scissors against a random number generator, call a card suit. Pick before every reveal, win points, and spend them to unlock the next band.",
       },
       { property: "og:title", content: "purerandomness — Play the Scenario Bands" },
       {
         property: "og:description",
-        content: "Three full-bleed scenario bands with placeholder slots and start actions.",
+        content:
+          "A ladder of pure-chance games. Pick before every reveal, win points, and spend them to unlock harder odds.",
       },
     ],
   }),

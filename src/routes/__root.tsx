@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SiteHeader } from "../components/site-header";
+import { GuestBanner } from "../components/guest-banner";
 import { SoundSettingsProvider } from "../hooks/use-sound-settings";
 import { GameDataProvider } from "../hooks/use-game-data";
 
@@ -19,8 +20,8 @@ function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
+        <h1 className="text-7xl text-foreground">404</h1>
+        <h2 className="mt-4 text-3xl text-foreground">Page not found</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           The page you're looking for doesn't exist or has been moved.
         </p>
@@ -47,9 +48,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
-        </h1>
+        <h1 className="text-3xl tracking-tight text-foreground">This page didn't load</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Something went wrong on our end. You can try refreshing or head back home.
         </p>
@@ -128,7 +127,11 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <GameDataProvider>
         <SoundSettingsProvider>
-          <SiteHeader />
+          {/* Header and guest banner pin together, so the banner never scrolls away. */}
+          <div className="sticky top-0 z-50">
+            <SiteHeader />
+            <GuestBanner />
+          </div>
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
         </SoundSettingsProvider>

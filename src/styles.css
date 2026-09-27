@@ -24,6 +24,39 @@
   --on-light: var(--ink);
   --on-dark: var(--base);
   --border: rgb(26 22 20 / 15%);
+
+  /*
+   * Text color for each band, chosen by measured contrast — not by whether the
+   * band "looks" light or dark. Tomato reads as dark but only passes AA with ink.
+   * src/test/band-contrast.test.tsx fails if any pairing drops below 4.5:1.
+   */
+  --on-tomato: var(--ink);
+  --on-mustard: var(--ink);
+  --on-forest: var(--base);
+  --on-slate: var(--base);
+  --on-clay: var(--base);
+
+  /* Locked bands are dimmed by this scrim over the band color; their text stays opaque. */
+  --locked-scrim: color-mix(in srgb, var(--ink) 50%, transparent);
+  --on-locked: var(--base);
+
+  /* shadcn/ui semantic slots, mapped onto this palette so their classes resolve. */
+  --primary: var(--ink);
+  --primary-foreground: var(--base);
+  --secondary: var(--base);
+  --secondary-foreground: var(--ink);
+  --muted: var(--base);
+  --muted-foreground: color-mix(in srgb, var(--ink) 70%, var(--base));
+  --accent: color-mix(in srgb, var(--ink) 8%, var(--base));
+  --accent-foreground: var(--ink);
+  --destructive: var(--tomato);
+  --destructive-foreground: var(--on-tomato);
+  --card: var(--base);
+  --card-foreground: var(--ink);
+  --popover: var(--base);
+  --popover-foreground: var(--ink);
+  --input: var(--border);
+  --ring: var(--ink);
 }
 
 @theme inline {
@@ -39,6 +72,29 @@
   --color-on-light: var(--on-light);
   --color-on-dark: var(--on-dark);
   --color-border: var(--border);
+  --color-on-tomato: var(--on-tomato);
+  --color-on-mustard: var(--on-mustard);
+  --color-on-forest: var(--on-forest);
+  --color-on-slate: var(--on-slate);
+  --color-on-clay: var(--on-clay);
+  --color-locked-scrim: var(--locked-scrim);
+  --color-on-locked: var(--on-locked);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 
   --font-display: "Instrument Serif", Georgia, serif;
   --font-sans: "Public Sans", system-ui, sans-serif;
@@ -53,10 +109,12 @@
     border-color: var(--border);
   }
 
+  /* clip, not hidden: hidden turns body into a scroll container, which
+     breaks the sticky header (and the guest banner pinned with it). */
   html,
   body {
     max-width: 100%;
-    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   body {

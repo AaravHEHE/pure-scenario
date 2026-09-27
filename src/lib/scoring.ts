@@ -41,3 +41,14 @@ export function applyUnlock(balance: number, unlockCost: number): UnlockResult {
   if (balance < unlockCost) return { ok: false, balance };
   return { ok: true, balance: balance - unlockCost };
 }
+
+/** Points paid out across all wins: what the leaderboard ranks by, not the balance. */
+export function totalPointsEarned(
+  stats: Partial<Record<string, ScenarioStats>>,
+  winPoints: (scenarioKey: string) => number,
+): number {
+  return Object.entries(stats).reduce(
+    (sum, [scenarioKey, scenario]) => sum + (scenario?.wins ?? 0) * winPoints(scenarioKey),
+    0,
+  );
+}
