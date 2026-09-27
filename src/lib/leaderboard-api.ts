@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { loadSupabase } from "@/lib/supabase";
 import type { LeaderboardEntry } from "@/lib/leaderboard";
 
 /**
@@ -7,6 +7,7 @@ import type { LeaderboardEntry } from "@/lib/leaderboard";
  * guest data can ever be part of the request.
  */
 export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
+  const { supabase } = await loadSupabase();
   const { data, error } = await supabase
     .from("leaderboard_entries")
     .select("display_name, total_points")
