@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -10,26 +10,31 @@ import {
   createRouter,
 } from "@tanstack/react-router";
 
-// STUB for the signed-in state: real auth doesn't exist yet, so tests flip
-// this flag. Replace with a real session fixture when auth lands.
-const auth = vi.hoisted(() => ({ signedIn: false }));
-vi.mock("@/hooks/use-auth-status", () => ({ useIsSignedIn: () => auth.signedIn }));
-
-vi.mock("@/integrations/supabase/client", () => {
-  const rows = [{ display_name: "Ada", total_points: 500 }];
-  const query = {
-    select: () => query,
-    order: () => query,
-    then: (resolve: (v: unknown) => void) => resolve({ data: rows, error: null }),
-  };
-  return { supabase: { from: () => query } };
-});
+// Real AuthProvider, fake Supabase auth: a signed-in visitor is a stored,
+// verified session, exactly as a returning player would have.
+vi.mock(
+  "@/lib/supabase",
+  async () => (await import("./helpers/fake-supabase-auth")).supabaseModuleMock,
+);
 
 import { GuestBanner } from "@/components/guest-banner";
+import { AuthProvider } from "@/hooks/use-auth";
 import { GameDataProvider } from "@/hooks/use-game-data";
 import { Route as LeaderboardRoute } from "@/routes/leaderboard";
 import { Route as StatsRoute } from "@/routes/stats";
+import {
+  fakeAuth,
+  resetFakeAuth,
+  setLeaderboardRows,
+  storeSessionHint,
+  verifiedSession,
+} from "@/test/helpers/fake-supabase-auth";
 import { PlayedSession, repeat } from "@/test/helpers/guest-session";
+
+function signInBeforeLoad() {
+  storeSessionHint();
+  fakeAuth.presetSession(verifiedSession());
+}
 
 function renderAt(path: string) {
   const rootRoute = createRootRoute({
@@ -63,18 +68,21 @@ function renderAt(path: string) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={client}>
-      <GameDataProvider>
-        <PlayedSession plays={repeat(3, { scenarioKey: "coin-flip", won: true })}>
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          <RouterProvider router={router as any} />
-        </PlayedSession>
-      </GameDataProvider>
+      <AuthProvider>
+        <GameDataProvider>
+          <PlayedSession plays={repeat(3, { scenarioKey: "coin-flip", won: true })}>
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            <RouterProvider router={router as any} />
+          </PlayedSession>
+        </GameDataProvider>
+      </AuthProvider>
     </QueryClientProvider>,
   );
 }
 
 beforeEach(() => {
-  auth.signedIn = false;
+  resetFakeAuth();
+  setLeaderboardRows([{ display_name: "Ada", total_points: 500 }]);
 });
 
 describe("guest banner", () => {
@@ -107,18 +115,18 @@ describe("guest banner", () => {
     expect(screen.queryByRole("note", { name: "Guest notice" })).not.toBeInTheDocument();
   });
 
-  it.each(["/stats", "/leaderboard"])(
-    "never appears on %s for a signed-in user (stubbed)",
-    async (path) => {
-      auth.signedIn = true;
-      renderAt(path);
-      expect(await screen.findByRole("heading", { level: 1 })).toBeInTheDocument();
-      expect(screen.queryByRole("note", { name: "Guest notice" })).not.toBeInTheDocument();
-    },
-  );
+  it.each(["/stats", "/leaderboard"])("never appears on %s for a signed-in user", async (path) => {
+    signInBeforeLoad();
+    renderAt(path);
+    expect(await screen.findByRole("heading", { level: 1 })).toBeInTheDocument();
+    // Let the session settle, then check: never shown, not even while restoring.
+    await waitFor(() => expect(fakeAuth.auth.onAuthStateChange).toHaveBeenCalled());
+    await act(async () => {});
+    expect(screen.queryByRole("note", { name: "Guest notice" })).not.toBeInTheDocument();
+  });
 
   it("a signed-in user sees only real entries, with no guest preview row", async () => {
-    auth.signedIn = true;
+    signInBeforeLoad();
     renderAt("/leaderboard");
     expect(await screen.findByText("Ada")).toBeInTheDocument();
     expect(screen.queryByText("Guest")).not.toBeInTheDocument();

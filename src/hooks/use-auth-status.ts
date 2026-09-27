@@ -1,6 +1,11 @@
-// STUB until real auth lands: nobody can sign in yet, so everyone is a guest.
-// Replace with the real session check (Supabase auth) when accounts exist.
-// Tests mock this module to simulate a signed-in user.
+import { useAuth } from "@/hooks/use-auth";
+
+/** A verified account is signed in. */
 export function useIsSignedIn(): boolean {
-  return false;
+  return useAuth().status === "signed-in";
+}
+
+/** Known to be a guest: false while the browser is still checking for a session. */
+export function useIsGuest(): boolean {
+  return useAuth().status === "guest";
 }

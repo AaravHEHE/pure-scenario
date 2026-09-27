@@ -1,6 +1,6 @@
 import { useRouterState } from "@tanstack/react-router";
 
-import { useIsSignedIn } from "@/hooks/use-auth-status";
+import { useIsGuest } from "@/hooks/use-auth-status";
 
 // Not dismissible: it describes the page's ongoing state for a guest, unlike
 // the unlock warning dialog, which is about an action just taken.
@@ -12,10 +12,12 @@ const COPY: Record<string, string> = {
 };
 
 export function GuestBanner() {
-  const signedIn = useIsSignedIn();
+  // Only once the browser knows this is a guest: never shown to a signed-in
+  // player, even briefly while their session is being restored.
+  const guest = useIsGuest();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const copy = COPY[pathname.replace(/\/+$/, "") || "/"];
-  if (signedIn || !copy) return null;
+  if (!guest || !copy) return null;
 
   return (
     <div role="note" aria-label="Guest notice" className="w-full bg-tomato text-on-tomato">

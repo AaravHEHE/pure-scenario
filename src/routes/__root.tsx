@@ -15,6 +15,7 @@ import { SiteHeader } from "../components/site-header";
 import { GuestBanner } from "../components/guest-banner";
 import { SoundSettingsProvider } from "../hooks/use-sound-settings";
 import { GameDataProvider } from "../hooks/use-game-data";
+import { AuthProvider } from "../hooks/use-auth";
 
 function NotFoundComponent() {
   return (
@@ -125,17 +126,19 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <GameDataProvider>
-        <SoundSettingsProvider>
-          {/* Header and guest banner pin together, so the banner never scrolls away. */}
-          <div className="sticky top-0 z-50">
-            <SiteHeader />
-            <GuestBanner />
-          </div>
-          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-          <Outlet />
-        </SoundSettingsProvider>
-      </GameDataProvider>
+      <AuthProvider>
+        <GameDataProvider>
+          <SoundSettingsProvider>
+            {/* Header and guest banner pin together, so the banner never scrolls away. */}
+            <div className="sticky top-0 z-50">
+              <SiteHeader />
+              <GuestBanner />
+            </div>
+            {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+            <Outlet />
+          </SoundSettingsProvider>
+        </GameDataProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

@@ -9,13 +9,18 @@ import {
   type ScenarioStats,
 } from "@/lib/scoring";
 import { SCENARIOS, type ScenarioKey } from "@/lib/scenarios";
+import { useOptionalAuth } from "@/hooks/use-auth";
 
 export type { ScenarioStats };
 
 // Guests get no persistence: balance, unlocks, and stats live only in this
 // context for the current page load. Reloading erases everything, by
-// design (see CLAUDE.md, "Guests vs. accounts — persistence"). Signed-in
-// accounts persisting via Supabase comes later, with auth.
+// design (see CLAUDE.md, "Guests vs. accounts — persistence").
+//
+// Signed-in accounts use this same in-memory state until account persistence
+// exists. Whoever is playing is part of the state: when that changes (sign in,
+// sign out, a different account), play starts again from zero. Guest-to-account
+// transfer will replace the reset on sign-in.
 interface GameState {
   balance: number;
   stats: Partial<Record<ScenarioKey, ScenarioStats>>;
@@ -41,6 +46,14 @@ export function GameDataProvider({ children }: { children: ReactNode }) {
   // reducer just forces a re-render so consumers see it.
   const stateRef = useRef<GameState>(INITIAL_STATE);
   const [, forceRender] = useReducer((count: number) => count + 1, 0);
+
+  const auth = useOptionalAuth();
+  const player = auth?.status === "signed-in" && auth.user ? auth.user.id : "guest";
+  const playerRef = useRef(player);
+  if (playerRef.current !== player) {
+    playerRef.current = player;
+    stateRef.current = INITIAL_STATE;
+  }
 
   const setState = useCallback((updater: GameStateUpdater) => {
     stateRef.current = updater(stateRef.current);
