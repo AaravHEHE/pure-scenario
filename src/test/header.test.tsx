@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import {
   RouterProvider,
@@ -9,19 +9,40 @@ import {
   Outlet,
 } from "@tanstack/react-router";
 import { SiteHeader } from "../components/site-header";
+import { AuthProvider } from "../hooks/use-auth";
 import { SoundSettingsProvider } from "../hooks/use-sound-settings";
+import { loadSupabaseMock, resetFakeAuth } from "./helpers/fake-supabase-auth";
+
+vi.mock(
+  "@/lib/supabase",
+  async () => (await import("./helpers/fake-supabase-auth")).supabaseModuleMock,
+);
+
+beforeEach(() => {
+  resetFakeAuth();
+});
 
 function buildRouter() {
   const rootRoute = createRootRoute({
     component: () => (
-      <SoundSettingsProvider>
-        <SiteHeader />
-        <Outlet />
-      </SoundSettingsProvider>
+      <AuthProvider>
+        <SoundSettingsProvider>
+          <SiteHeader />
+          <Outlet />
+        </SoundSettingsProvider>
+      </AuthProvider>
     ),
   });
-  const indexRoute = createRoute({ getParentRoute: () => rootRoute, path: "/", component: () => null });
-  const statsRoute = createRoute({ getParentRoute: () => rootRoute, path: "/stats", component: () => null });
+  const indexRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/",
+    component: () => null,
+  });
+  const statsRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/stats",
+    component: () => null,
+  });
   const leaderboardRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: "/leaderboard",

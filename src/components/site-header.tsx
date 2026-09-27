@@ -1,7 +1,14 @@
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 
+import { useAuth } from "@/hooks/use-auth";
 import { useSoundSettings } from "@/hooks/use-sound-settings";
+
+// Loaded the first time it opens, so the dialog's code isn't in every page's
+// startup bundle.
+const AuthDialog = lazy(() =>
+  import("@/components/auth-dialog").then((module) => ({ default: module.AuthDialog })),
+);
 
 const navLinks = [
   { to: "/stats", label: "Stats" },
@@ -11,6 +18,8 @@ const navLinks = [
 export function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { enabled: soundEnabled, toggle: toggleSound } = useSoundSettings();
+  const auth = useAuth();
+  const [authOpen, setAuthOpen] = useState(false);
 
   return (
     <header className="w-full border-b bg-base">
@@ -40,12 +49,33 @@ export function SiteHeader() {
           >
             Sound: {soundEnabled ? "On" : "Off"}
           </button>
-          <button
-            type="button"
-            className="border bg-ink px-3 py-2 font-sans text-xs uppercase tracking-widest text-on-dark"
-          >
-            Sign in
-          </button>
+          {auth.status === "signed-in" ? (
+            <>
+              {auth.user?.email ? (
+                <span
+                  title={auth.user.email}
+                  className="hidden max-w-[14rem] truncate font-sans text-xs text-ink sm:inline"
+                >
+                  {auth.user.email}
+                </span>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => void auth.signOut()}
+                className="border bg-ink px-3 py-2 font-sans text-xs uppercase tracking-widest text-on-dark"
+              >
+                Sign out
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setAuthOpen(true)}
+              className="border bg-ink px-3 py-2 font-sans text-xs uppercase tracking-widest text-on-dark"
+            >
+              Sign in
+            </button>
+          )}
           <button
             type="button"
             aria-label="Toggle menu"
@@ -70,6 +100,13 @@ export function SiteHeader() {
           </button>
         </div>
       </div>
+
+      {/* Also opens by itself when a sign-in redirect comes back with an error. */}
+      {authOpen || auth.redirectError !== null ? (
+        <Suspense fallback={null}>
+          <AuthDialog open onOpenChange={setAuthOpen} />
+        </Suspense>
+      ) : null}
 
       {menuOpen ? (
         <nav className="flex flex-col border-t md:hidden">
